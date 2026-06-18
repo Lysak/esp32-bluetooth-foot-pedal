@@ -1,0 +1,9 @@
+.idea
+build/
+.esphome/
+esphome/.esphome/
+esphome/secrets.yaml
+esphome/.device_ip
+__pycache__/
+*.pyc
+.DS_Store

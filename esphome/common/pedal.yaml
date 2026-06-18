@@ -1,0 +1,49 @@
+esp32_bluetooth_foot_pedal_ble_hid:
+  id: foot_pedal_hid
+  ble_device_name: ${ble_device_name}
+  default_key_name: ${default_key_name}
+
+espidf_ble_keyboard:
+  id: pedal_keyboard
+  device_name: ${ble_device_name}
+  host_slots: 1
+  keyboard_layout: us
+  key_delay_ms: 40
+
+binary_sensor:
+  - platform: gpio
+    name: "${friendly_name} Pedal"
+    id: pedal_gpio_state
+    pin:
+      number: ${pedal_pin}
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: ${debounce_on_ms}
+      - delayed_off: ${debounce_off_ms}
+    on_press:
+      then:
+        - lambda: |-
+            id(foot_pedal_hid).handle_pedal_press();
+            id(pedal_keyboard).press_key(0x00, 0x68);  // F13
+    on_release:
+      then:
+        - lambda: |-
+            id(foot_pedal_hid).handle_pedal_release();
+            id(pedal_keyboard).release_all_keys();
+
+  - platform: template
+    name: "${friendly_name} BLE Connected"
+    id: pedal_ble_connected
+    entity_category: diagnostic
+    lambda: |-
+      return id(pedal_keyboard).is_connected();
+
+  - platform: template
+    name: "${friendly_name} Key Held"
+    id: pedal_key_held
+    entity_category: diagnostic
+    lambda: |-
+      return id(foot_pedal_hid).is_key_currently_held();

@@ -1,0 +1,25 @@
+substitutions:
+  device_name: esp32-bluetooth-foot-pedal
+  friendly_name: ESP32 Bluetooth Foot Pedal
+  pedal_pin: GPIO27
+  debounce_on_ms: 30ms
+  debounce_off_ms: 30ms
+  ble_device_name: esp32-bluetooth-foot-pedal
+  default_key_name: F13
+
+packages:
+  board: !include boards/esp32-wroom-32.yaml
+  base: !include common/base.yaml
+  diagnostics: !include common/diagnostics.yaml
+  pedal: !include common/pedal.yaml
+  statistics: !include common/statistics.yaml
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [ esp32_bluetooth_foot_pedal_ble_hid, espidf_ble_keyboard ]
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}

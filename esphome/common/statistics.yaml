@@ -1,0 +1,49 @@
+button:
+  - platform: template
+    name: "${friendly_name} Reset Statistics"
+    id: pedal_reset_statistics
+    entity_category: config
+    on_press:
+      then:
+        - lambda: |-
+            id(foot_pedal_hid).reset_statistics();
+
+sensor:
+  - platform: template
+    name: "${friendly_name} Presses Since Boot"
+    lambda: |-
+      return id(foot_pedal_hid).get_session_press_count();
+    update_interval: 10s
+
+  - platform: template
+    name: "${friendly_name} Persistent Total Press Count"
+    lambda: |-
+      return id(foot_pedal_hid).get_persistent_press_count();
+    update_interval: 10s
+
+  - platform: template
+    name: "${friendly_name} Last Hold Duration"
+    unit_of_measurement: s
+    accuracy_decimals: 3
+    lambda: |-
+      return id(foot_pedal_hid).get_last_hold_duration_seconds();
+    update_interval: 2s
+
+  - platform: template
+    name: "${friendly_name} Total Held Time Since Boot"
+    unit_of_measurement: s
+    accuracy_decimals: 3
+    lambda: |-
+      return id(foot_pedal_hid).get_session_held_duration_seconds();
+    update_interval: 5s
+
+text_sensor:
+  - platform: template
+    name: "${friendly_name} Persistence Status"
+    entity_category: diagnostic
+    lambda: |-
+      if (id(foot_pedal_hid).has_pending_persistence()) {
+        return {"dirty"};
+      }
+      return {"clean"};
+    update_interval: 15s
