@@ -22,6 +22,30 @@ sensor:
     update_interval: 10s
 
   - platform: template
+    name: "${friendly_name} Persistent Total Held Time"
+    unit_of_measurement: s
+    accuracy_decimals: 3
+    lambda: |-
+      return id(foot_pedal_hid).get_persistent_held_duration_seconds();
+    update_interval: 10s
+
+  - platform: template
+    name: "${friendly_name} Current Month Held Time"
+    unit_of_measurement: s
+    accuracy_decimals: 3
+    lambda: |-
+      return id(foot_pedal_hid).get_current_month_held_duration_seconds();
+    update_interval: 10s
+
+  - platform: template
+    name: "${friendly_name} Previous Month Held Time"
+    unit_of_measurement: s
+    accuracy_decimals: 3
+    lambda: |-
+      return id(foot_pedal_hid).get_previous_month_held_duration_seconds();
+    update_interval: 10s
+
+  - platform: template
     name: "${friendly_name} Last Hold Duration"
     unit_of_measurement: s
     accuracy_decimals: 3
@@ -46,4 +70,20 @@ text_sensor:
         return {"dirty"};
       }
       return {"clean"};
+    update_interval: 15s
+
+  - platform: template
+    name: "${friendly_name} Last Hold Event"
+    entity_category: diagnostic
+    lambda: |-
+      return {id(foot_pedal_hid).get_last_event_timestamp_iso()};
+    update_interval: 15s
+
+  - platform: template
+    name: "${friendly_name} Persisted Hold Events"
+    entity_category: diagnostic
+    lambda: |-
+      char buffer[16];
+      snprintf(buffer, sizeof(buffer), "%u", id(foot_pedal_hid).get_persisted_event_count());
+      return {buffer};
     update_interval: 15s

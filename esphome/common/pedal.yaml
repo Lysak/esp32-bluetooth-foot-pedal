@@ -2,6 +2,7 @@ esp32_bluetooth_foot_pedal_ble_hid:
   id: foot_pedal_hid
   ble_device_name: ${ble_device_name}
   default_key_name: ${default_key_name}
+  time_id: homeassistant_time
 
 espidf_ble_keyboard:
   id: pedal_keyboard

@@ -18,3 +18,7 @@ wifi:
     password: !secret ap_password
 
 captive_portal:
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
