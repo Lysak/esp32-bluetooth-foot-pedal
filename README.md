@@ -22,6 +22,16 @@ pedal pressed  -> hold F13
 pedal released -> release all keys
 ```
 
+## macOS note
+
+WARNING: if you bind Push to Talk in Discord to `F13`, macOS can play its system `alert sound` when Discord is not focused and the key press is sent to the background app.
+
+To disable that sound on macOS:
+
+1. Open `System Settings` -> `Sound`.
+2. In `Sound Effects`, set `Alert volume` to `0`.
+3. Turn off `Play user interface sound effects`.
+
 ## Hardware
 
 - ESP-32S / ESP-WROOM-32 dev board
