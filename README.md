@@ -56,6 +56,7 @@ docs/         focused operator and architecture notes
 - [docs/flashing.md](docs/flashing.md): how to prepare secrets, compile, flash, and monitor the board.
 - [docs/home-assistant.md](docs/home-assistant.md): expected Home Assistant entities and integration role.
 - [docs/macos-pairing.md](docs/macos-pairing.md): pairing and reconnect expectations for macOS.
+- [docs/macos-wake-debugging.md](docs/macos-wake-debugging.md): how to inspect macOS wake reasons and tell Bluetooth HID wakes from unrelated ones.
 - [docs/testing.md](docs/testing.md): bench-test flow with and without the physical pedal.
 - [docs/wiring.md](docs/wiring.md): first-version wiring for `GPIO27`.
 - [components/esp32_bluetooth_foot_pedal_ble_hid/README.md](components/esp32_bluetooth_foot_pedal_ble_hid/README.md): purpose and limits of the local statistics component.
