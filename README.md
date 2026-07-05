@@ -12,15 +12,18 @@ Version 1 scope:
 Current implementation:
 
 - real BLE HID keyboard transport is handled by the local vendored `espidf_ble_keyboard` component
-- the local `esp32_bluetooth_foot_pedal_ble_hid` component owns pedal-state statistics and the Home Assistant-facing counters
+- the local `esp32_bluetooth_foot_pedal_ble_hid` component owns pedal-state statistics, reconnect-sensitive hold behavior, and the Home Assistant-facing counters
 - Home Assistant is observational only; it does not relay the key press to the Mac
 
 ## Behavior
 
 ```text
-pedal pressed  -> hold F13
+pedal pressed while connected    -> hold F13
+pedal pressed while disconnected -> start BLE advertising, reconnect, then hold F13 if still pressed
 pedal released -> release all keys
 ```
+
+The firmware no longer auto-advertises on boot or after disconnect. A real physical pedal press is the only event that makes the BLE keyboard connectable again.
 
 ## macOS note
 
@@ -55,7 +58,7 @@ docs/         focused operator and architecture notes
 - [docs/architecture.md](docs/architecture.md): short runtime split between BLE HID and Home Assistant telemetry.
 - [docs/flashing.md](docs/flashing.md): how to prepare secrets, compile, flash, and monitor the board.
 - [docs/home-assistant.md](docs/home-assistant.md): expected Home Assistant entities and integration role.
-- [docs/macos-pairing.md](docs/macos-pairing.md): pairing and reconnect expectations for macOS.
+- [docs/macos-pairing.md](docs/macos-pairing.md): pairing and press-only reconnect expectations for macOS.
 - [docs/macos-wake-debugging.md](docs/macos-wake-debugging.md): how to inspect macOS wake reasons and tell Bluetooth HID wakes from unrelated ones.
 - [docs/testing.md](docs/testing.md): bench-test flow with and without the physical pedal.
 - [docs/wiring.md](docs/wiring.md): first-version wiring for `GPIO27`.

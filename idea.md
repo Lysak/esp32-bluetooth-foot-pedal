@@ -42,7 +42,7 @@ Version 1 does not try to implement:
 - many shortcut profiles
 - complex combinations editor
 - battery mode
-- deep sleep
+- timer-based sleep policy
 - multiple pedals
 - web UI
 
@@ -191,8 +191,9 @@ Required rules:
 - send key-up or release-all only on debounced release transition
 - call `releaseAll()` on release
 - call `releaseAll()` on disconnect if possible
-- call `releaseAll()` after reconnect before accepting a new press
-- if reconnect happens while the pedal is physically held, require release and fresh press before sending a new key-down
+- never auto-advertise after disconnect
+- only a fresh physical press may start BLE advertising again
+- if reconnect happens while the pedal is physically held from that same press, send the key-down after reconnect and keep it held until release
 
 ---
 
@@ -205,6 +206,7 @@ The device must be testable for:
 - initial pairing
 - reconnect after ESP32 reboot
 - reconnect after Mac sleep/wake
+- no spontaneous reconnect after disconnect
 - key-down / key-up correctness
 - long hold behavior
 - repeated presses
@@ -230,4 +232,3 @@ But this project should keep its own identity:
 - BLE HID instead of USB HID
 - ESPHome + Home Assistant integration
 - no copied branding or naming
-

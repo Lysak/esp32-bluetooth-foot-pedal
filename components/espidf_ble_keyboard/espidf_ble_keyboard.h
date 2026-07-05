@@ -101,6 +101,18 @@ class EspidfBleKeyboard : public Component {
 
   void set_web_control(bool enabled) { web_control_enabled_ = enabled; }
   void set_host_slots(uint8_t slots) { host_slots_ = slots > MAX_HOST_SLOTS ? MAX_HOST_SLOTS : slots; }
+  void set_auto_advertise_on_boot(bool enabled) { auto_advertise_on_boot_ = enabled; }
+  void set_auto_advertise_on_disconnect(bool enabled) { auto_advertise_on_disconnect_ = enabled; }
+  bool auto_advertise_on_boot() const { return auto_advertise_on_boot_; }
+  bool auto_advertise_on_disconnect() const { return auto_advertise_on_disconnect_; }
+  void start_advertising_now();
+  void stop_advertising_now();
+  void mark_services_ready() { services_ready_ = true; }
+  bool take_pending_manual_advertise() {
+    const bool pending = pending_manual_advertise_;
+    pending_manual_advertise_ = false;
+    return pending;
+  }
 
   // Keyboard layout
   void set_keyboard_layout(const std::string &id);      // YAML default
@@ -261,6 +273,10 @@ class EspidfBleKeyboard : public Component {
   uint32_t key_delay_ms_{80};
 
   bool web_control_enabled_{false};
+  bool auto_advertise_on_boot_{true};
+  bool auto_advertise_on_disconnect_{true};
+  bool pending_manual_advertise_{false};
+  bool services_ready_{false};
   float mouse_sensitivity_{1.0f};
   float mouse_accel_{0.15f};
   float mouse_max_speed_{4.0f};

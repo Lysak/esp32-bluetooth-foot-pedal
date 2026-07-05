@@ -110,6 +110,14 @@ That means "the pedal did it" must be proven from logs for the exact timestamp, 
 
 If a real Bluetooth keyboard is paired to a Mac, then yes, it can normally wake the Mac. A BLE pedal that advertises itself as a keyboard is in the same class from macOS's point of view.
 
+Current firmware direction in this repo:
+
+- do not auto-advertise on boot;
+- do not auto-advertise after disconnect;
+- only a physical pedal press may expose the keyboard again.
+
+That policy reduces host-side wake opportunities, but any moment when the pedal is actively advertising or connected as a keyboard is still a period where macOS may treat it as wake-capable HID.
+
 The important distinction is not "keyboard vs pedal" but:
 
 - Bluetooth HID activity

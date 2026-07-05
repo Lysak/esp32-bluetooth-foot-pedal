@@ -124,6 +124,7 @@ static bool s_adv_data_set = false;
 static bool s_scan_rsp_data_set = false;
 static bool s_use_static_passkey = false;
 static bool s_require_mitm = false;
+static bool s_advertising_requested = false;
 
 // Multi-host: when true, next advertising cycle uses directed advertising to target host
 static bool s_directed_adv_pending = false;
@@ -278,6 +279,7 @@ static void apply_security_params(bool use_static_passkey) {
 }
 
 static void do_start_advertising() {
+    s_advertising_requested = true;
     // Set per-slot random address so each slot appears as a different BLE device.
     // This prevents hosts bonded to other slots from auto-reconnecting.
     if (s_instance) {
@@ -344,6 +346,13 @@ static void do_start_advertising() {
     if (s_adv_data_set && s_scan_rsp_data_set) {
         esp_ble_gap_start_advertising(&adv_params);
     }
+}
+
+static void do_stop_advertising() {
+    s_advertising_requested = false;
+    s_directed_adv_pending = false;
+    s_directed_adv_active = false;
+    esp_ble_gap_stop_advertising();
 }
 
 // ── GAP Event Handler ────────────────────────────────────────────────────────
@@ -674,7 +683,16 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
             ESP_LOGD(TAG, "GATTS: Service started (%u/3)", s_services_started);
             if (s_services_started < 3) break;
             ESP_LOGI(TAG, "GATTS: All services started (DIS + BAS + HID)");
-            do_start_advertising();
+            if (s_instance) {
+                s_instance->mark_services_ready();
+                if (s_instance->take_pending_manual_advertise()) {
+                    do_start_advertising();
+                } else if (s_instance->auto_advertise_on_boot()) {
+                    do_start_advertising();
+                }
+            } else {
+                do_start_advertising();
+            }
             break;
         case ESP_GATTS_CONNECT_EVT: {
             ESP_LOGI(TAG, "GATTS: Connected");
@@ -737,7 +755,9 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
             system_ccc_val = 0;
             mouse_ccc_val = 0;
             battery_ccc_val = 0;
-            do_start_advertising();
+            if (s_instance && s_instance->auto_advertise_on_disconnect()) {
+                do_start_advertising();
+            }
             break;
         }
         case ESP_GATTS_WRITE_EVT:
@@ -1067,6 +1087,8 @@ void EspidfBleKeyboard::update_rssi(int8_t rssi) {
 // ── Component Setup ──────────────────────────────────────────────────────────
 void EspidfBleKeyboard::setup() {
     s_instance = this;
+    services_ready_ = false;
+    pending_manual_advertise_ = false;
     type_mutex_ = xSemaphoreCreateMutex();
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -1125,6 +1147,26 @@ void EspidfBleKeyboard::setup() {
       web_control_->setup();
     }
 #endif
+}
+
+void EspidfBleKeyboard::start_advertising_now() {
+    if (is_connected_) {
+        return;
+    }
+    if (!services_ready_) {
+        pending_manual_advertise_ = true;
+        return;
+    }
+    pending_manual_advertise_ = false;
+    do_start_advertising();
+}
+
+void EspidfBleKeyboard::stop_advertising_now() {
+    pending_manual_advertise_ = false;
+    if (!services_ready_) {
+        return;
+    }
+    do_stop_advertising();
 }
 
 void EspidfBleKeyboard::update_led_state_(uint8_t led_byte) {
@@ -1680,6 +1722,4 @@ void EspidfBleKeyboardButton::press_action() {
 
 }  // namespace espidf_ble_keyboard
 }  // namespace esphome
-
-
 

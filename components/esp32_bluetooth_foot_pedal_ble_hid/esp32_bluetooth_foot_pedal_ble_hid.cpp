@@ -61,6 +61,16 @@ void Esp32BluetoothFootPedalBleHid::setup() {
 }
 
 void Esp32BluetoothFootPedalBleHid::loop() {
+  const bool connected = this->ble_keyboard_ != nullptr && this->ble_keyboard_->is_connected();
+  if (connected != this->ble_connected_) {
+    this->ble_connected_ = connected;
+    if (!connected) {
+      this->hid_key_down_sent_ = false;
+    } else if (this->pending_key_down_after_reconnect_ && this->pedal_pressed_) {
+      this->send_key_down_();
+      this->pending_key_down_after_reconnect_ = false;
+    }
+  }
   this->rotate_month_buckets_if_needed_();
   this->maybe_flush_persistence_();
 }
@@ -91,7 +101,14 @@ void Esp32BluetoothFootPedalBleHid::handle_pedal_press() {
   this->persistence_dirty_ = true;
 
   ESP_LOGI(TAG, "Pedal press #%u", this->session_press_count_);
-  this->send_key_down_();
+  if (this->ble_keyboard_ != nullptr && this->ble_keyboard_->is_connected()) {
+    this->send_key_down_();
+    this->pending_key_down_after_reconnect_ = false;
+  } else if (this->ble_keyboard_ != nullptr) {
+    this->pending_key_down_after_reconnect_ = true;
+    this->ble_keyboard_->start_advertising_now();
+    ESP_LOGI(TAG, "Pedal press while disconnected; starting BLE advertising");
+  }
 }
 
 void Esp32BluetoothFootPedalBleHid::handle_pedal_release() {
@@ -127,7 +144,15 @@ void Esp32BluetoothFootPedalBleHid::handle_pedal_release() {
   }
 
   ESP_LOGI(TAG, "Pedal release, hold %.3fs", this->get_last_hold_duration_seconds());
-  this->send_release_all_();
+  if (this->hid_key_down_sent_) {
+    this->send_release_all_();
+  }
+  if (!this->ble_connected_ && this->ble_keyboard_ != nullptr) {
+    this->ble_keyboard_->stop_advertising_now();
+    ESP_LOGI(TAG, "Pedal released before BLE reconnect; stopping advertising");
+  }
+  this->pending_key_down_after_reconnect_ = false;
+  this->hid_key_down_sent_ = false;
 }
 
 void Esp32BluetoothFootPedalBleHid::reset_statistics() {
@@ -184,10 +209,23 @@ std::string Esp32BluetoothFootPedalBleHid::get_last_event_timestamp_iso() const 
 }
 
 void Esp32BluetoothFootPedalBleHid::send_key_down_() {
-  ESP_LOGI(TAG, "TODO BLE key down: %s", this->default_key_name_.c_str());
+  if (this->ble_keyboard_ == nullptr || !this->ble_keyboard_->is_connected()) {
+    return;
+  }
+  this->ble_keyboard_->press_key(0x00, 0x68);
+  this->hid_key_down_sent_ = true;
+  ESP_LOGI(TAG, "BLE key down: %s", this->default_key_name_.c_str());
 }
 
-void Esp32BluetoothFootPedalBleHid::send_release_all_() { ESP_LOGI(TAG, "TODO BLE release all"); }
+void Esp32BluetoothFootPedalBleHid::send_release_all_() {
+  if (this->ble_keyboard_ == nullptr || !this->ble_keyboard_->is_connected()) {
+    this->hid_key_down_sent_ = false;
+    return;
+  }
+  this->ble_keyboard_->release_all_keys();
+  this->hid_key_down_sent_ = false;
+  ESP_LOGI(TAG, "BLE release all");
+}
 
 void Esp32BluetoothFootPedalBleHid::ensure_nvs_ready_() {
   esp_err_t ret = nvs_flash_init();

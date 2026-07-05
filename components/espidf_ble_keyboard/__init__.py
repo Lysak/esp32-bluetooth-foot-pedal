@@ -22,6 +22,8 @@ CONF_SLOT = "slot"
 CONF_CUSTOM_TEXT_ID = "custom_text_id"
 CONF_KEYBOARD_LAYOUT = "keyboard_layout"
 CONF_LAYOUT = "layout"
+CONF_AUTO_ADVERTISE_ON_BOOT = "auto_advertise_on_boot"
+CONF_AUTO_ADVERTISE_ON_DISCONNECT = "auto_advertise_on_disconnect"
 PASSKEY_MODE_LEGACY = "legacy"
 PASSKEY_MODE_SECURE_CONNECTIONS = "secure_connections"
 
@@ -80,6 +82,8 @@ CONFIG_SCHEMA = cv.All(
         cv.Optional(CONF_MOUSE_MAX_SPEED, default=4.0): cv.float_range(min=0.5, max=20.0),
         cv.Optional(CONF_SCROLL_SENSITIVITY, default=2.0): cv.float_range(min=0.1, max=10.0),
         cv.Optional(CONF_KEYBOARD_LAYOUT, default="us"): cv.one_of(*SUPPORTED_LAYOUTS, lower=True),
+        cv.Optional(CONF_AUTO_ADVERTISE_ON_BOOT, default=True): cv.boolean,
+        cv.Optional(CONF_AUTO_ADVERTISE_ON_DISCONNECT, default=True): cv.boolean,
         cv.Optional(CONF_CUSTOM_TEXT_ID): cv.ensure_list(cv.use_id(cg.EntityBase)),
         cv.Optional(CONF_HOST_SLOTS, default=4): cv.int_range(min=1, max=10),
         cv.Optional(CONF_HOSTS): cv.All(cv.ensure_list(HOST_SCHEMA)),
@@ -116,6 +120,8 @@ async def to_code(config):
     cg.add(var.set_mouse_max_speed(config[CONF_MOUSE_MAX_SPEED]))
     cg.add(var.set_scroll_sensitivity(config[CONF_SCROLL_SENSITIVITY]))
     cg.add(var.set_keyboard_layout(config[CONF_KEYBOARD_LAYOUT]))
+    cg.add(var.set_auto_advertise_on_boot(config[CONF_AUTO_ADVERTISE_ON_BOOT]))
+    cg.add(var.set_auto_advertise_on_disconnect(config[CONF_AUTO_ADVERTISE_ON_DISCONNECT]))
 
     if CONF_HOSTS in config:
         for host in config[CONF_HOSTS]:

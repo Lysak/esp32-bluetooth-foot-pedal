@@ -3,6 +3,7 @@ esp32_bluetooth_foot_pedal_ble_hid:
   ble_device_name: ${ble_device_name}
   default_key_name: ${default_key_name}
   time_id: homeassistant_time
+  keyboard_id: pedal_keyboard
 
 espidf_ble_keyboard:
   id: pedal_keyboard
@@ -10,6 +11,8 @@ espidf_ble_keyboard:
   host_slots: 1
   keyboard_layout: us
   key_delay_ms: 40
+  auto_advertise_on_boot: false
+  auto_advertise_on_disconnect: false
 
 binary_sensor:
   - platform: gpio
@@ -28,12 +31,10 @@ binary_sensor:
       then:
         - lambda: |-
             id(foot_pedal_hid).handle_pedal_press();
-            id(pedal_keyboard).press_key(0x00, 0x68);  // F13
     on_release:
       then:
         - lambda: |-
             id(foot_pedal_hid).handle_pedal_release();
-            id(pedal_keyboard).release_all_keys();
 
   - platform: template
     name: "${friendly_name} BLE Connected"

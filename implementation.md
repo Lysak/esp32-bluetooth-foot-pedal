@@ -19,7 +19,7 @@ Version 1 includes:
 1. One ESP32 board.
 2. One pedal input.
 3. One default binding: `F13`.
-4. BLE keyboard pairing and reconnection on macOS.
+4. BLE keyboard pairing on macOS plus press-only reconnect after disconnect.
 5. ESPHome Wi-Fi, API, OTA, and diagnostics.
 6. Home Assistant entities for status and counters.
 7. Low-wear persistence for lifetime statistics.
@@ -30,7 +30,7 @@ Version 1 excludes:
 1. Multi-profile shortcut editor.
 2. Complex modifier combinations UI.
 3. Battery mode.
-4. Sleep mode.
+4. Timer-driven sleep mode.
 5. Multiple pedals.
 6. Web server or captive configuration UI beyond standard ESPHome fallback behavior.
 
@@ -193,7 +193,7 @@ Success criteria:
 
 Add:
 
-- reconnect policy
+- press-only reconnect policy
 - disconnect safety
 - held-during-reconnect safety
 - startup diagnostics
@@ -202,7 +202,8 @@ Add:
 Success criteria:
 
 - no logically stuck key after disconnect tests
-- reconnect requires clean release before new key-down
+- the pedal does not auto-readvertise after disconnect
+- reconnect can start only from a fresh physical press
 - reboot does not leave Mac with held key state
 
 ### Phase 5: Documentation and operator workflow

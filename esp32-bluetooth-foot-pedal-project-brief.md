@@ -171,7 +171,7 @@ Implement:
 - BLE advertising;
 - initial pairing;
 - bonding where supported;
-- automatic reconnection;
+- press-triggered reconnection only;
 - connection state reporting;
 - configurable BLE device name, default `esp32-bluetooth-foot-pedal`;
 - keyboard report transmission;
@@ -208,7 +208,6 @@ Call or emulate `releaseAll()`:
 - on pedal release;
 - before changing profile;
 - on BLE disconnect if possible;
-- after BLE reconnect before accepting a new press;
 - during shutdown/reboot hooks when possible;
 - after an internal timeout or inconsistent state;
 - before entering any future sleep mode.
@@ -217,10 +216,10 @@ Prevent a logically stuck modifier or PTT key.
 
 If the pedal is already physically held when BLE reconnects, choose and document one deterministic policy. Recommended default:
 
-- send `releaseAll()` on reconnect;
-- do not begin a new key-down until the pedal is released and pressed again.
+- if the reconnect was started by that same physical press, send key-down after reconnect and keep it held;
+- if the pedal was not physically held anymore, do not send a new key-down.
 
-This avoids unexpectedly opening the microphone after reconnection.
+This keeps reconnect behavior aligned with the real pedal state while still preventing background reconnects.
 
 ---
 
@@ -397,20 +396,18 @@ Any profile change must first release all HID keys.
 
 The first version is USB-powered. Therefore:
 
-- do not use ESP32 deep sleep;
-- do not intentionally disconnect BLE after inactivity;
-- do not require a first press to wake and a second press to activate;
-- preserve immediate response to the first press;
-- keep the BLE connection available;
-- allow normal ESP-IDF radio power-saving mechanisms only if they do not cause missed first presses or unacceptable reconnect latency.
+- do not rely on a timer-driven idle disconnect policy;
+- do not auto-advertise on boot;
+- do not auto-advertise after disconnect;
+- allow the existing BLE connection to live as long as the host keeps it alive;
+- require a fresh physical press to make the keyboard connectable again after disconnect;
+- accept that reconnecting from that press can take a short time.
 
 Explain in documentation:
 
-- deep sleep shuts down Bluetooth and Wi-Fi;
-- the first press would only wake the ESP32;
-- reconnection to macOS would take time;
-- Home Assistant would show the device as unavailable;
-- deep sleep is unsuitable for the USB-powered version.
+- why a keyboard-class BLE device can wake a Mac when it is advertising or connected;
+- why removing background advertising reduces unwanted wake opportunities;
+- why a physical press is now the only reconnect trigger.
 
 Design the code so a future battery-powered hardware variant could introduce a separate power policy, but do not complicate version 1 with it.
 
@@ -446,9 +443,10 @@ Define and test the following matrix:
 | Wi-Fi is unavailable | BLE keyboard continues to work |
 | ESPHome API disconnects | BLE keyboard continues to work |
 | Mac is disconnected | Local state and statistics continue; no invalid HID send |
-| Mac reconnects | Release-all safety runs; next clean press works |
-| ESP32 reboots | It advertises/reconnects and does not leave a stuck key |
-| Pedal is held during reboot | No automatic unsafe key-down after reconnect |
+| Mac is disconnected and no pedal press occurs | Device does not auto-readvertise or reconnect |
+| Mac reconnects after a fresh held press | The held key begins only after reconnect completes |
+| ESP32 reboots | It stays quiet until a physical press starts advertising again |
+| Pedal is held during reconnect started by that same press | Key-down begins after reconnect and remains held until release |
 | Rapid contact bounce | Exactly one logical press is counted |
 | Wi-Fi reconnect storm | Pedal latency remains acceptable |
 | Home Assistant changes profile | Existing key is released before switch |
@@ -465,9 +463,10 @@ macOS support is mandatory, not assumed.
 Document and test:
 
 - initial pairing through macOS Bluetooth settings;
-- reconnection after ESP32 reboot;
+- press-only reconnection after ESP32 reboot;
 - reconnection after Mac sleep/wake;
 - reconnection after Bluetooth is toggled off/on on the Mac;
+- no spontaneous reconnect after disconnect without a new pedal press;
 - keyboard key-down/key-up behavior;
 - modifier combinations;
 - long hold behavior;
@@ -644,12 +643,12 @@ Do not start with a large implementation before this decision is documented.
 Create the smallest firmware that:
 
 - boots;
-- advertises as `esp32-bluetooth-foot-pedal`;
+- can advertise as `esp32-bluetooth-foot-pedal` when triggered by a pedal press;
 - pairs with macOS;
 - sends one configurable key;
 - holds while the switch is pressed;
 - releases when the switch is released;
-- reconnects after reboot;
+- reconnects only after a fresh physical press;
 - performs release-all safety.
 
 ## Phase 2 — ESPHome integration
@@ -690,7 +689,7 @@ Add:
 
 Add:
 
-- reconnect handling;
+- press-only reconnect handling;
 - Mac sleep/wake testing;
 - held-during-disconnect safety;
 - long-duration soak testing;
@@ -722,7 +721,7 @@ Version 1.0 is acceptable only when all of these are true:
 2. Holding the pedal keeps the configured HID key held.
 3. Releasing the pedal releases the key reliably.
 4. No key or modifier remains stuck after disconnect or reconnect testing.
-5. The Mac reconnects after an ESP32 reboot without requiring firmware changes.
+5. The Mac reconnects after an ESP32 reboot only when a fresh physical press starts advertising.
 6. Home Assistant can be completely offline and the pedal still works.
 7. Wi-Fi can be disabled and the pedal still works.
 8. Home Assistant shows pedal state and BLE connection state when available.

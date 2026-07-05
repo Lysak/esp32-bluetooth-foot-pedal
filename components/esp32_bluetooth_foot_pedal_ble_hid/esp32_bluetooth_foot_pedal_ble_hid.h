@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "esphome/components/espidf_ble_keyboard/espidf_ble_keyboard.h"
 #include "esphome/components/time/real_time_clock.h"
 #include "esphome/core/component.h"
 
@@ -26,6 +27,7 @@ class Esp32BluetoothFootPedalBleHid : public Component {
   void set_ble_device_name(const std::string &ble_device_name) { ble_device_name_ = ble_device_name; }
   void set_default_key_name(const std::string &default_key_name) { default_key_name_ = default_key_name; }
   void set_time_source(time::RealTimeClock *time_source) { time_source_ = time_source; }
+  void set_ble_keyboard(espidf_ble_keyboard::EspidfBleKeyboard *ble_keyboard) { ble_keyboard_ = ble_keyboard; }
 
   void handle_pedal_press();
   void handle_pedal_release();
@@ -76,6 +78,8 @@ class Esp32BluetoothFootPedalBleHid : public Component {
   bool persistence_dirty_{false};
   bool nvs_ready_{false};
   bool press_started_with_valid_time_{false};
+  bool pending_key_down_after_reconnect_{false};
+  bool hid_key_down_sent_{false};
 
   uint32_t hold_started_at_ms_{0};
   uint32_t hold_started_at_epoch_{0};
@@ -92,6 +96,7 @@ class Esp32BluetoothFootPedalBleHid : public Component {
   uint64_t current_month_held_duration_ms_{0};
   uint64_t previous_month_held_duration_ms_{0};
   std::vector<PedalEventRecord> pending_events_;
+  espidf_ble_keyboard::EspidfBleKeyboard *ble_keyboard_{nullptr};
 };
 
 }  // namespace esp32_bluetooth_foot_pedal_ble_hid
