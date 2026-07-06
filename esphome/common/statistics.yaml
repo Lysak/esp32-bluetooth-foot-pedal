@@ -1,6 +1,6 @@
 button:
   - platform: template
-    name: "${friendly_name} Reset Statistics"
+    name: "Reset Statistics"
     id: pedal_reset_statistics
     entity_category: config
     on_press:
@@ -10,19 +10,19 @@ button:
 
 sensor:
   - platform: template
-    name: "${friendly_name} Presses Since Boot"
+    name: "Presses Since Boot"
     lambda: |-
       return id(foot_pedal_hid).get_session_press_count();
     update_interval: 10s
 
   - platform: template
-    name: "${friendly_name} Persistent Total Press Count"
+    name: "Persistent Total Press Count"
     lambda: |-
       return id(foot_pedal_hid).get_persistent_press_count();
     update_interval: 10s
 
   - platform: template
-    name: "${friendly_name} Persistent Total Held Time"
+    name: "Persistent Total Held Time"
     unit_of_measurement: s
     accuracy_decimals: 3
     lambda: |-
@@ -30,7 +30,7 @@ sensor:
     update_interval: 10s
 
   - platform: template
-    name: "${friendly_name} Current Month Held Time"
+    name: "Current Month Held Time"
     unit_of_measurement: s
     accuracy_decimals: 3
     lambda: |-
@@ -38,7 +38,7 @@ sensor:
     update_interval: 10s
 
   - platform: template
-    name: "${friendly_name} Previous Month Held Time"
+    name: "Previous Month Held Time"
     unit_of_measurement: s
     accuracy_decimals: 3
     lambda: |-
@@ -46,7 +46,7 @@ sensor:
     update_interval: 10s
 
   - platform: template
-    name: "${friendly_name} Last Hold Duration"
+    name: "Last Hold Duration"
     unit_of_measurement: s
     accuracy_decimals: 3
     lambda: |-
@@ -54,7 +54,7 @@ sensor:
     update_interval: 2s
 
   - platform: template
-    name: "${friendly_name} Total Held Time Since Boot"
+    name: "Total Held Time Since Boot"
     unit_of_measurement: s
     accuracy_decimals: 3
     lambda: |-
@@ -63,7 +63,7 @@ sensor:
 
 text_sensor:
   - platform: template
-    name: "${friendly_name} Persistence Status"
+    name: "Persistence Status"
     entity_category: diagnostic
     lambda: |-
       if (id(foot_pedal_hid).has_pending_persistence()) {
@@ -73,14 +73,14 @@ text_sensor:
     update_interval: 15s
 
   - platform: template
-    name: "${friendly_name} Last Hold Event"
+    name: "Last Hold Event"
     entity_category: diagnostic
     lambda: |-
       return {id(foot_pedal_hid).get_last_event_timestamp_iso()};
     update_interval: 15s
 
   - platform: template
-    name: "${friendly_name} Persisted Hold Events"
+    name: "Persisted Hold Events"
     entity_category: diagnostic
     lambda: |-
       char buffer[16];
