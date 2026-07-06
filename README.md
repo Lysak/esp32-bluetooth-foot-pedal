@@ -2,6 +2,8 @@
 
 ESP32 foot pedal for macOS that behaves as a Bluetooth keyboard and exposes status, diagnostics, and counters to Home Assistant through ESPHome.
 
+This repository pins ESPHome in `.esphome-version` and Python in `.esphome-python-version` to stay compatible with Home Assistant `2024.3.3` on a 1 GB Orange Pi host. Do not run ad-hoc `esphome` or `uvx esphome ...` commands from this repo; use the `make` targets so the pinned toolchain is always applied.
+
 Version 1 scope:
 
 - one pedal on `GPIO27`
@@ -68,12 +70,15 @@ docs/         focused operator and architecture notes
 
 1. Copy `esphome/secrets.example.yaml` to `esphome/secrets.yaml`.
 2. Fill in Wi-Fi, API, and OTA secrets.
-3. Build or flash with `make`.
+3. Use `make esphome-version` and `make esphome-python-version` if you want to confirm the pinned toolchain.
+4. Build or flash with `make`.
 
 ## Commands
 
 ```bash
 make help
+make esphome-version
+make esphome-python-version
 make esphome-compile
 make esphome-flash DEVICE=/dev/tty.usbserial-XXXX
 make gen-api-key
