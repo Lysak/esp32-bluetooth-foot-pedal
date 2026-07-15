@@ -2,6 +2,14 @@
 
 ESP32 foot pedal for macOS that behaves as a Bluetooth keyboard and exposes status, diagnostics, and counters to Home Assistant through ESPHome.
 
+## Components
+
+| Component | AliExpress |
+|---|---|
+| ESP-32S / ESP-WROOM-32 development board, 30P/38P | 📱 https://s.click.aliexpress.com/e/_c3SP1ult<br>🖥 https://s.click.aliexpress.com/e/_c30P7tWr |
+| ESP32-S3 development board | 📱 https://s.click.aliexpress.com/e/_c4o9jJr1<br>🖥 https://s.click.aliexpress.com/e/_c4MoKrXD |
+| Momentary Foot Switch, SPDT, 1NO+1NC | 📱&nbsp;https://s.click.aliexpress.com/e/_c3Symxzd<br>🖥&nbsp;https://s.click.aliexpress.com/e/_c3CmBoX9 |
+
 This repository pins ESPHome in `.esphome-version` and Python in `.esphome-python-version` to stay compatible with Home Assistant `2024.3.3` on a 1 GB Orange Pi host. Do not run ad-hoc `esphome` or `uvx esphome ...` commands from this repo; use the `make` targets so the pinned toolchain is always applied.
 
 Version 1 scope:
