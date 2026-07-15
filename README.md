@@ -52,6 +52,10 @@ components/   local external components
 docs/         focused operator and architecture notes
 ```
 
+## Scripts
+
+- [scripts/README.md](scripts/README.md): macOS helper scripts, including a Discord Push to Talk watchdog.
+
 ## Markdown files
 
 - [idea.md](idea.md): product direction, MVP, hardware baseline, and persistence policy.
