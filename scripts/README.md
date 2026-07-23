@@ -14,6 +14,8 @@ The script connects to Discord's local **IPC socket** (`$TMPDIR/discord-ipc-0`) 
 
 This replaces the earlier LevelDB-based approach (`discord-ptt-guard.sh`), which had a 1–5 minute write delay before the new mode was visible on disk.
 
+Discord's OAuth2 `access_token` expires after 7 days. The daemon refreshes it proactively (a day before expiry, using the stored `refresh_token`) and reactively (if a session ever gets an auth error), rewriting `~/.discord-ptt-token.json` each time. If the refresh itself ever fails (e.g. the `refresh_token` was revoked), it sends a macOS notification instead of silently retrying a dead token forever.
+
 ### Architecture
 
 ```
@@ -71,7 +73,7 @@ cp scripts/discord-ptt-setup.py ~/discord-ptt-setup.py
 python3 ~/discord-ptt-setup.py
 ```
 
-Discord will show an **Authorize** popup — click it. The script exchanges the code for an access token and saves it to `~/.discord-ptt-token.json`. You never need to do this again unless the token expires.
+Discord will show an **Authorize** popup — click it. The script exchanges the code for an access token and saves it to `~/.discord-ptt-token.json` (including `client_secret`, needed later for refresh). You should not need to run this again — `discord-ptt-guard.py` refreshes the access token itself before it expires (Discord tokens are valid for 7 days) and again if a session ever hits an auth error. Re-run this script only if the daemon logs show refresh itself failing (i.e. the `refresh_token` was revoked or the app lost authorization).
 
 #### 4. Install the daemon
 
