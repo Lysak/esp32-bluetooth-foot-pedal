@@ -25,9 +25,9 @@ LOG_FILE = os.path.expanduser("~/discord-ptt-guard.log")
 LOCKFILE = "/tmp/discord-ptt-guard.lock"
 NOTI = "/opt/homebrew/bin/noti"
 
-REFRESH_BUFFER = 86400       # refresh a day before expiry
-REFRESH_RETRY_INTERVAL = 300  # don't hit the Discord token endpoint more than once per 5 min
-AUTH_NOTIFY_INTERVAL = 3600   # don't notify about broken auth more than once per hour
+REFRESH_BUFFER = 86400       # рефрешити за добу до закінчення терміну дії
+REFRESH_RETRY_INTERVAL = 300  # не смикати Discord token endpoint частіше ніж раз/5хв
+AUTH_NOTIFY_INTERVAL = 3600   # нотифікація про зламану авторизацію не частіше раз/год
 
 logging.basicConfig(
     level=logging.INFO,
@@ -106,7 +106,7 @@ def notify_auth_broken(detail):
     if now - _last_auth_notify < AUTH_NOTIFY_INTERVAL:
         return
     _last_auth_notify = now
-    notify(f"Discord token isn't refreshing: {detail}. Re-authorization needed (discord-ptt-setup.py).", sound='Basso')
+    notify(f"Токен Discord не оновлюється: {detail}. Потрібна повторна авторизація (discord-ptt-setup.py).", sound='Basso')
 
 
 # ── token refresh ─────────────────────────────────────────────────────────────
@@ -157,7 +157,7 @@ def refresh_access_token(cfg):
 _last_refresh_attempt = 0
 
 def try_refresh(cfg):
-    """Tries to refresh the token, at most once per REFRESH_RETRY_INTERVAL. Returns (cfg, ok)."""
+    """Пробує оновити токен, не частіше ніж раз на REFRESH_RETRY_INTERVAL. Повертає (cfg, ok)."""
     global _last_refresh_attempt
     now = time.time()
     if now - _last_refresh_attempt < REFRESH_RETRY_INTERVAL:
@@ -215,7 +215,7 @@ def run_session(client_id, token):
 
     # Notify immediately if PTT is already off
     if current_mode == 'VOICE_ACTIVITY':
-        notify("Turn on Push to Talk!")
+        notify("Увімкни Push to Talk!")
         last_notified_at = time.time()
         log.info("Notification sent (initial state: PTT off)")
 
@@ -235,16 +235,16 @@ def run_session(client_id, token):
                 log.info(f"Mode changed: {mode}")
 
                 if mode == 'VOICE_ACTIVITY':
-                    notify("Turn on Push to Talk!")
+                    notify("Увімкни Push to Talk!")
                     last_notified_at = time.time()
                     log.info("Notification sent")
                 elif mode == 'PUSH_TO_TALK':
                     last_notified_at = 0
-                    log.info("PTT enabled — resetting")
+                    log.info("PTT увімкнено — скидаю")
         else:
             # Timeout — send reminder
             if last_notified_at and time.time() - last_notified_at >= REMIND_INTERVAL:
-                notify("Turn on Push to Talk!")
+                notify("Увімкни Push to Talk!")
                 last_notified_at = time.time()
                 log.info("Reminder sent")
 
@@ -262,9 +262,9 @@ def main():
     log.info(f"=== PTT Guard started (PID {os.getpid()}) ===")
 
     while True:
-        # Proactive refresh — a day before access_token expiry
+        # Проактивний рефреш — за добу до закінчення терміну дії access_token
         if cfg.get('expires_at') is None or time.time() >= cfg['expires_at'] - REFRESH_BUFFER:
-            log.info("Access token missing/about to expire — attempting proactive refresh")
+            log.info("Access token відсутній/скоро протухне — пробую проактивний рефреш")
             cfg, _ = try_refresh(cfg)
 
         try:
@@ -272,7 +272,7 @@ def main():
         except Exception as e:
             msg = str(e)
             if 'Auth failed' in msg or 'Invalid access token' in msg:
-                log.info("Auth failed — attempting reactive refresh")
+                log.info("Auth failed — пробую реактивний рефреш")
                 cfg, _ = try_refresh(cfg)
             log.error(f"Session error: {e} — retry in 15s")
             time.sleep(15)

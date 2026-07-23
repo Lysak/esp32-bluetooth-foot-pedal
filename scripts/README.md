@@ -39,7 +39,6 @@ The daemon runs as a **LaunchAgent** — starts on login, restarts automatically
 | `com.user.discord-ptt-guard.plist` | LaunchAgent definition. Installs into `~/Library/LaunchAgents/`. |
 | `.env.example` | Template for Discord app credentials. Copy to `.env` and fill in. |
 | `.env` | Actual credentials (not committed to git). |
-| `discord-ptt-guard.sh` | Legacy polling script (reads LevelDB). Superseded by the Python IPC approach. |
 
 ### Dependencies
 

@@ -10,6 +10,7 @@ import json
 import os
 import sys
 import subprocess
+import time
 import urllib.parse
 
 TOKEN_FILE = os.path.expanduser("~/.discord-ptt-token.json")
@@ -138,8 +139,10 @@ def main():
 
     config = {
         'client_id': client_id,
+        'client_secret': client_secret,
         'access_token': token_data['access_token'],
         'refresh_token': token_data.get('refresh_token'),
+        'expires_at': time.time() + token_data.get('expires_in', 604800),
     }
     with open(TOKEN_FILE, 'w') as f:
         json.dump(config, f, indent=2)
