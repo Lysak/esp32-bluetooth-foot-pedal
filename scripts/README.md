@@ -37,6 +37,8 @@ The daemon runs as a **LaunchAgent** — starts on login, restarts automatically
 | `discord-ptt-setup.py` | One-time OAuth2 authorization. Run once, saves token to `~/.discord-ptt-token.json`. |
 | `discord-ptt-guard.py` | Main daemon. Connects to Discord IPC, listens for voice setting changes, sends notifications. |
 | `com.user.discord-ptt-guard.plist` | LaunchAgent definition. Installs into `~/Library/LaunchAgents/`. |
+| `discord-ptt-guard-watchdog.sh` | Runs every 60s, re-bootstraps `discord-ptt-guard` if launchd doesn't have it loaded. |
+| `com.user.discord-ptt-guard-watchdog.plist` | LaunchAgent definition for the watchdog above. |
 | `.env.example` | Template for Discord app credentials. Copy to `.env` and fill in. |
 | `.env` | Actual credentials (not committed to git). |
 
@@ -79,10 +81,24 @@ Discord will show an **Authorize** popup — click it. The script exchanges the 
 ```bash
 cp scripts/discord-ptt-guard.py ~/discord-ptt-guard.py
 cp scripts/com.user.discord-ptt-guard.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.user.discord-ptt-guard.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.user.discord-ptt-guard.plist
 ```
 
 The daemon starts immediately and on every login.
+
+#### 5. Install the watchdog (recommended)
+
+`RunAtLoad`/`KeepAlive` alone are not fully reliable across macOS reboots and updates — this agent has been observed silently missing after an OS update restart with no crash logged. The watchdog checks every 60s whether `discord-ptt-guard` is loaded in launchd and re-bootstraps it if not:
+
+```bash
+mkdir -p ~/.local/bin
+cp scripts/discord-ptt-guard-watchdog.sh ~/.local/bin/
+chmod +x ~/.local/bin/discord-ptt-guard-watchdog.sh
+cp scripts/com.user.discord-ptt-guard-watchdog.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.user.discord-ptt-guard-watchdog.plist
+```
+
+Watchdog log: `~/discord-ptt-guard-watchdog.log` (only written when it actually has to re-bootstrap something).
 
 ### Manual run
 
