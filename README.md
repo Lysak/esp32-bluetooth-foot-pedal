@@ -50,7 +50,39 @@ To disable that sound on macOS:
 - ESP-32S / ESP-WROOM-32 dev board
 - momentary SPDT foot pedal, using `COM + NO`
 - Mac as the BLE keyboard target
-- USB 5 V power
+- 5 V power supply, optionally through the DIY UPS below
+
+## Uninterruptible power (optional)
+
+A DIY UPS keeps the pedal connected to the Mac during a mains outage.
+
+Parts: TP4056 Type-C charger with protection (`IN`/`B`/`OUT` pads), MT3608 boost, YX850 auto-switch, one 18650 cell, 470–1000 µF capacitor rated 10 V or higher.
+
+```text
+                ┌──────────────────────────────────────────► YX850 IN  (main)
+5 V PSU (+/−) ──┤
+                └─► TP4056 IN+/IN−
+                    TP4056 B+/B−     ◄──► 18650
+                    TP4056 OUT+/OUT− ──► MT3608 VIN+/VIN−
+                                         MT3608 VOUT+/VOUT− ──► YX850 BAT (backup)
+                                                                YX850 OUT ──► capacitor ──► ESP32 5V/VIN + GND
+```
+
+All grounds are common. YX850 pad labels differ between lots; check yours.
+
+Build:
+
+1. Charge the 18650 to 4.2 V with the TP4056 before wiring the rest.
+2. Feed the MT3608 from TP4056 `OUT+/OUT−`, not `B+/B−`, so the over-discharge protection stays in the path.
+3. Set the MT3608 with no load attached. It often ships at 12 V or more, which kills the ESP32. Target about 0.2 V below the PSU (e.g. 4.9 V for a 5.1 V PSU) so the YX850 never drains the cell while mains is present.
+4. Solder the capacitor on YX850 `OUT`, observing polarity (stripe = minus). It rides through the switchover gap; without it the ESP32 may reboot and drop BLE.
+5. Use 1 mm² (≈18 AWG) or thicker copper wire for power lines; 30 AWG is only fine for signals. Never solder directly to the cell: use holder tabs or nickel strip, then heat-shrink every joint.
+
+Check before connecting the pedal: YX850 `OUT` must stay at 4.5 V or more both with the PSU on and unplugged, because the ESP32 regulator needs about 4.4 V. Raise the MT3608 slightly if it reads lower.
+
+Test with the pedal: unplug the PSU, then plug it back in. The pedal must stay connected to the Mac and `uptime` in Home Assistant must not reset. After a few hours on mains the cell should still read about 4.2 V; if it drops, lower the MT3608 by 0.1–0.2 V. If the ESP32 still reboots on switchover, add a second 1000 µF capacitor in parallel.
+
+Runtime: the pedal draws about 0.6 W (estimated, not measured), so a ~3000 mAh 18650 lasts roughly 12 h. Disconnect the UPS before flashing over USB; OTA is fine.
 
 ## Firmware layout
 
